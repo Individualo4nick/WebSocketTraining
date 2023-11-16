@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+    <div>
+        <input type="text" id="name" placeholder="Name">
+        <input type="text" id="surname" placeholder="Surname">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div id="response"></div>
+
+    <script>
+        var stompClient = null;
+
+        function connect() {
+            var socket = new SockJS('/users/create');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (frame) {
+                stompClient.subscribe('/topic/response', function (response) {
+                    var responseDiv = document.getElementById('response');
+                    responseDiv.innerHTML += JSON.parse(response.body).name + '<br>';
+                    responseDiv.innerHTML += JSON.parse(response.body).surname + '<br>';
+                });
+            });
+        }
+
+        function sendMessage() {
+            var name = document.getElementById('name').value;
+            var surname = document.getElementById('surname').value;
+            stompClient.send("/app/users/create", {}, JSON.stringify({'name': name, 'surname': surname}));
+        }
+
+        window.onload = function () {
+            connect();
+        };
+    </script>
+</body>
+</html>
